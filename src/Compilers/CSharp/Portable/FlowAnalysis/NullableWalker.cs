@@ -797,8 +797,20 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 // If 'field' keyword is explicitly used by 'symbol', then use FlowAnalysisAnnotations from the backing field.
                 // Otherwise, use the FlowAnalysisAnnotations from the user-declared symbol (property or ordinary field).
-                var usesFieldKeyword = symbol is SourcePropertySymbolBase { UsesFieldKeyword: true };
-                var annotations = usesFieldKeyword ? field!.FlowAnalysisAnnotations : symbol.GetFlowAnalysisAnnotations();
+                bool usesFieldKeyword;
+                if (symbol is SourcePropertySymbolBase { UsesFieldKeyword: true } sourceProperty)
+                {
+                    usesFieldKeyword = true;
+                    if (field is null)
+                    {
+                        field = sourceProperty.BackingField;
+                    }
+                }
+                else
+                {
+                    usesFieldKeyword = false;
+                }
+                var annotations = usesFieldKeyword ? field?.FlowAnalysisAnnotations ?? symbol.GetFlowAnalysisAnnotations() : symbol.GetFlowAnalysisAnnotations();
                 if ((annotations & FlowAnalysisAnnotations.AllowNull) != 0)
                 {
                     // We assume that if a member has AllowNull then the user
@@ -827,6 +839,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     var useSiteInfo = Microsoft.CodeAnalysis.CompoundUseSiteInfo<AssemblySymbol>.DiscardedDependencies;
                     var canBeRequired = !symbol.IsStatic && !isReadOnly && symbol.Kind != SymbolKind.Event && !symbol.IsOverride &&
+                                        symbol.ContainingType is not null &&
                                         symbol.IsAsRestrictive(symbol.ContainingType, ref useSiteInfo);
 
                     if (canBeRequired && symbol is PropertySymbol { SetMethod: { } setMethod } && !setMethod.IsAsRestrictive(symbol.ContainingType, ref useSiteInfo))

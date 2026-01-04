@@ -2929,5 +2929,44 @@ public class C
                 //     public Rec(Rec other) { } // 1
                 Diagnostic(ErrorCode.WRN_UninitializedNonNullableField, "Rec").WithArguments("property", "Prop").WithLocation(9, 12));
         }
+
+        [Fact, WorkItem("https://github.com/dotnet/roslyn/issues/80504")]
+        public void ReproCrashWithFieldKeywordAndSetsRequiredMembers()
+        {
+            var source = """
+                 using System.Diagnostics.CodeAnalysis;
+
+                 namespace System.Runtime.CompilerServices
+                 {
+                     public class RequiredMemberAttribute : Attribute { }
+                     public class CompilerFeatureRequiredAttribute : Attribute { public CompilerFeatureRequiredAttribute(string name) { } }
+                     public static class IsExternalInit { }
+                 }
+                 namespace System.Diagnostics.CodeAnalysis
+                 {
+                     public class SetsRequiredMembersAttribute : Attribute { }
+                 }
+
+                 public class Foo {
+                     public required string Bar {
+                         get;
+                         init {
+                             field = value;
+                         }
+                     }
+                 }
+
+                 public class FooDerivative : Foo {
+                     [SetsRequiredMembers]
+                     public FooDerivative() {
+                     }
+                 }
+                 """;
+
+            var comp = CreateCompilation(source, parseOptions: TestOptions.RegularPreview, options: WithNullableEnable());
+            comp.VerifyDiagnostics(
+                Diagnostic(ErrorCode.WRN_UninitializedNonNullableBackingField, "FooDerivative").WithArguments("property", "Bar", " Consider adding the 'required' modifier, or declaring the property as nullable, or safely handling the case where 'field' is null in the 'get' accessor.").WithLocation(25, 12)
+            );
+        }
     }
 }
