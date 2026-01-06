@@ -840,26 +840,20 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
 
                     ErrorCode identityCode = usesFieldKeyword ? ErrorCode.WRN_UninitializedNonNullableBackingField : ErrorCode.WRN_UninitializedNonNullableField;
-                    ErrorCode messageCode;
+                    string suggestionResourceName;
                     if (usesFieldKeyword)
                     {
-                        messageCode = canBeRequired ? ErrorCode.WRN_UninitializedNonNullableBackingField_Required : ErrorCode.WRN_UninitializedNonNullableBackingField;
+                        suggestionResourceName = canBeRequired ? nameof(CSharpResources.WRN_UninitializedNonNullableBackingField_Suggestion_RequiredOrNullable) : nameof(CSharpResources.WRN_UninitializedNonNullableBackingField_Suggestion_Nullable);
                     }
                     else
                     {
-                        messageCode = canBeRequired ? ErrorCode.WRN_UninitializedNonNullableField_Required : ErrorCode.WRN_UninitializedNonNullableField;
+                        suggestionResourceName = canBeRequired ? nameof(CSharpResources.WRN_UninitializedNonNullableField_Suggestion_RequiredOrNullable) : nameof(CSharpResources.WRN_UninitializedNonNullableField_Suggestion_Nullable);
                     }
 
-                    DiagnosticInfo info;
-                    var args = new object[] { symbol.Kind.Localize(), symbol.Name };
-                    if (messageCode == identityCode)
-                    {
-                        info = new CSDiagnosticInfo(identityCode, args, ImmutableArray<Symbol>.Empty, additionalLocations: symbol.Locations);
-                    }
-                    else
-                    {
-                        info = new UninitializedNonNullableFieldDiagnosticInfo(messageCode, identityCode, args, additionalLocations: symbol.Locations);
-                    }
+                    var kind = symbol.Kind.Localize();
+                    var suggestion = new LocalizableResourceString(suggestionResourceName, CSharpResources.ResourceManager, typeof(CSharpResources), kind.ToString());
+                    var args = new object[] { kind, symbol.Name, suggestion };
+                    var info = new CSDiagnosticInfo(identityCode, args, ImmutableArray<Symbol>.Empty, additionalLocations: symbol.Locations);
 
                     Diagnostics.Add(info, exitLocation ?? symbol.GetFirstLocationOrNone());
                 }

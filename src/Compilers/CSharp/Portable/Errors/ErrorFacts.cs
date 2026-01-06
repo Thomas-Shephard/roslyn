@@ -84,6 +84,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             nullableWarnings.Add(GetId(ErrorCode.WRN_NullabilityMismatchInParameterTypeOnInterceptor));
 
             nullableWarnings.Add(GetId(ErrorCode.WRN_UninitializedNonNullableBackingField));
+            nullableWarnings.Add(GetId(ErrorCode.WRN_UninitializedNonNullableBackingField_Required));
 
             NullableWarnings = nullableWarnings.ToImmutable();
         }
@@ -447,6 +448,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_NullabilityMismatchInReturnTypeOnExplicitImplementation:
                 case ErrorCode.WRN_NullabilityMismatchInParameterTypeOnExplicitImplementation:
                 case ErrorCode.WRN_UninitializedNonNullableField:
+                case ErrorCode.WRN_UninitializedNonNullableField_Required:
+                case ErrorCode.WRN_UninitializedNonNullableBackingField_Required:
                 case ErrorCode.WRN_NullabilityMismatchInAssignment:
                 case ErrorCode.WRN_NullabilityMismatchInArgument:
                 case ErrorCode.WRN_NullabilityMismatchInArgumentForOutput:
@@ -2557,8 +2560,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 or ErrorCode.ERR_CompilationUnitUnexpected
                 or ErrorCode.ERR_ScopedAfterInOutRefReadonly
                 or ErrorCode.ERR_InvalidModifierAfterScoped
-                or ErrorCode.ERR_StructLayoutAndExtendedLayout
-                or ErrorCode.ERR_RuntimeDoesNotSupportExtendedLayoutTypes
+                or ErrorCode.WRN_UninitializedNonNullableField_Required
+                or ErrorCode.WRN_UninitializedNonNullableBackingField_Required
                     => false,
             };
 #pragma warning restore CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
